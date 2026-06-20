@@ -268,7 +268,7 @@ window.addEventListener('load', () => {
         const rawEl = document.getElementById('raw-base') as HTMLTextAreaElement;
         if (rawEl) rawEl.value = pinzaBaseData;
         const nameEl = document.getElementById('file-name-base');
-        if (nameEl) nameEl.innerText = 'pinza_base.txt';
+        if (nameEl) nameEl.innerText = 'balon.txt';
       }
     }
     
@@ -281,7 +281,7 @@ window.addEventListener('load', () => {
         const rawEl = document.getElementById('raw-movil') as HTMLTextAreaElement;
         if (rawEl) rawEl.value = pinzaMovilData;
         const nameEl = document.getElementById('file-name-movil');
-        if (nameEl) nameEl.innerText = 'pinza_movil.txt';
+        if (nameEl) nameEl.innerText = '< VACÍO >';
       }
     }
     

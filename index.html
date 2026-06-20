@@ -6,11 +6,11 @@
   <title>Graficación</title>
   <style>
     :root {
-      --bg-dark: #000000;
-      --text-main: #ffffff;
-      --text-muted: #666666;
-      --border-color: #222222;
-      --hover-bg: #111111;
+      --bg-dark: #fff0f5;      /* Lavender blush */
+      --text-main: #8a3a5e;    /* Deep rose */
+      --text-muted: #b87a98;   /* Muted rose */
+      --border-color: #ffb3d1; /* Lighter pink border */
+      --hover-bg: #ffcce0;     /* Hover pink */
     }
     
     body, html {
@@ -18,17 +18,18 @@
       padding: 0;
       width: 100%;
       height: 100vh;
-      background: var(--bg-dark);
+      background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 100%);
       color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       overflow: hidden;
     }
 
     .glass-panel {
-      background: transparent;
-      border: none;
-      box-shadow: none;
-      border-radius: 0;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 179, 209, 0.5);
+      box-shadow: 0 8px 32px rgba(230, 150, 180, 0.15);
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
     }
     
     .topbar {
@@ -73,6 +74,14 @@
       position: relative;
     }
     
+    .bottom-panel {
+      border-radius: 20px 20px 0 0;
+      background: rgba(255, 255, 255, 0.7) !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.8) !important;
+      box-shadow: 0 -10px 40px rgba(230, 150, 180, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
     .left-panel {
       width: 240px;
       margin: 0;
@@ -99,21 +108,25 @@
     .synth-btn {
       display: block;
       width: 100%;
-      background: transparent;
+      background: rgba(255, 255, 255, 0.5);
       color: var(--text-main);
       border: 1px solid var(--border-color);
-      padding: 10px 15px;
-      font-size: 0.75rem;
-      font-weight: 400;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      padding: 10px;
       text-align: center;
+      cursor: pointer;
+      font-size: 0.8rem;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
+      transition: all 0.3s ease;
+      border-radius: 30px;
+      box-shadow: 0 4px 10px rgba(255, 179, 209, 0.2);
     }
     .synth-btn:hover {
       background: var(--text-main);
-      color: var(--bg-dark);
+      color: #fff;
+      border-color: var(--text-main);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(138, 58, 94, 0.3);
     }
     .synth-btn:active {
       opacity: 0.7;
