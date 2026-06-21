@@ -1,7 +1,7 @@
-var _a, _b, _c;
+var _a, _b;
 import { Obj3D } from './Obj3D.js';
 import { CvZbuf } from './CvZbuf.js';
-import { pinzaBaseData, pinzaMovilData } from './defaultModels.js';
+import { butacaBase as pinzaBaseData, butacaBrazo as pinzaMovilData } from './butacaModels.js';
 let canvas;
 let graphics;
 canvas = document.getElementById('circlechart');
@@ -95,30 +95,6 @@ function vp(dTheta, dPhi, fRho) {
 // Eventos
 (_a = document.getElementById('file-input-base')) === null || _a === void 0 ? void 0 : _a.addEventListener('change', leerArchivoBase, false);
 (_b = document.getElementById('file-input-movil')) === null || _b === void 0 ? void 0 : _b.addEventListener('change', leerArchivoMovil, false);
-let autoRotating = true;
-let animationFrameId;
-function toggleAutoRotate() {
-    autoRotating = !autoRotating;
-    const btn = document.getElementById('btn-auto-rotate');
-    if (btn) {
-        if (autoRotating) {
-            btn.innerHTML = '■ DETENER';
-            rotateLoop();
-        }
-        else {
-            btn.innerHTML = '▶ ANIMAR';
-            cancelAnimationFrame(animationFrameId);
-        }
-    }
-}
-function rotateLoop() {
-    if (!autoRotating)
-        return;
-    let dTheta = 45 * 0.0005;
-    vp(dTheta, 0, 1);
-    animationFrameId = requestAnimationFrame(rotateLoop);
-}
-(_c = document.getElementById('btn-auto-rotate')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', toggleAutoRotate, false);
 let Pix, Piy;
 let Pfx, Pfy;
 let flag = false;
@@ -127,17 +103,6 @@ function handleMouse(evento) {
     Pix = evento.offsetX;
     Piy = evento.offsetY;
     flag = true;
-    // Al hacer click, cerrar la pinza
-    if (cv && cv.getObjs().length > 1) {
-        let movil = cv.getObjs()[1];
-        movil.localRotZ = -(25 * Math.PI) / 180.0;
-        const apSlider = document.getElementById('input-apertura');
-        if (apSlider) {
-            apSlider.value = '25';
-            document.getElementById('val-apertura').innerText = '25°';
-        }
-        cv.paint();
-    }
 }
 function makeVizualization(evento) {
     if (flag && obj) {
@@ -145,25 +110,35 @@ function makeVizualization(evento) {
         Pfy = evento.offsetY;
         let difX = Pfx - Pix;
         let difY = Pfy - Piy;
-        // Mejor sensibilidad para 360 grados
-        vp(-difX * 0.01, difY * 0.01, 1);
+        // Rota la silla en su eje (Y)
+        if (baseObj)
+            baseObj.globalRotY += difX * 0.01;
+        if (movilObj)
+            movilObj.globalRotY += difX * 0.01;
+        // Mueve la paleta hacia arriba/abajo
+        if (movilObj) {
+            let ang = movilObj.localRotZ - difY * 0.02;
+            if (ang > 0)
+                ang = 0;
+            if (ang < -Math.PI / 2)
+                ang = -Math.PI / 2;
+            movilObj.localRotZ = ang;
+            const apSlider = document.getElementById('input-apertura');
+            if (apSlider) {
+                let deg = Math.round((-ang * 180) / Math.PI);
+                apSlider.value = deg.toString();
+                const valApertura = document.getElementById('val-apertura');
+                if (valApertura)
+                    valApertura.innerText = deg + '°';
+            }
+        }
+        cv.paint();
         Pix = Pfx;
         Piy = Pfy;
     }
 }
 function noDraw() {
     flag = false;
-    // Al soltar el click, abrir la pinza
-    if (cv && cv.getObjs().length > 1) {
-        let movil = cv.getObjs()[1];
-        movil.localRotZ = 0;
-        const apSlider = document.getElementById('input-apertura');
-        if (apSlider) {
-            apSlider.value = '0';
-            document.getElementById('val-apertura').innerText = '0°';
-        }
-        cv.paint();
-    }
 }
 canvas.addEventListener('mousedown', handleMouse);
 canvas.addEventListener('mouseup', noDraw);
@@ -187,13 +162,37 @@ let manualRotationInterval;
 function startManualRotation(dTheta, dPhi, fRho = 1) {
     if (!obj)
         return;
-    // Rotate/zoom once immediately
-    vp(dTheta, dPhi, fRho);
-    // Then start interval for continuous action
+    const applyRotation = () => {
+        if (dTheta !== 0) {
+            if (baseObj)
+                baseObj.globalRotY += dTheta;
+            if (movilObj)
+                movilObj.globalRotY += dTheta;
+        }
+        if (fRho !== 1) {
+            vp(0, 0, fRho);
+        }
+        if (dPhi !== 0 && movilObj) {
+            let ang = movilObj.localRotZ - dPhi * 0.5;
+            if (ang > 0)
+                ang = 0;
+            if (ang < -Math.PI / 2)
+                ang = -Math.PI / 2;
+            movilObj.localRotZ = ang;
+            const apSlider = document.getElementById('input-apertura');
+            if (apSlider) {
+                let deg = Math.round((-ang * 180) / Math.PI);
+                apSlider.value = deg.toString();
+                const valApertura = document.getElementById('val-apertura');
+                if (valApertura)
+                    valApertura.innerText = deg + '°';
+            }
+            cv.paint();
+        }
+    };
+    applyRotation();
     clearInterval(manualRotationInterval);
-    manualRotationInterval = window.setInterval(() => {
-        vp(dTheta, dPhi, fRho);
-    }, 30); // 30ms for smooth ~30fps
+    manualRotationInterval = window.setInterval(applyRotation, 30);
 }
 function stopManualRotation() {
     clearInterval(manualRotationInterval);
@@ -248,6 +247,11 @@ window.addEventListener('load', () => {
             tempObj.baseColorR = 190;
             tempObj.baseColorG = 190;
             tempObj.baseColorB = 190;
+            tempObj.targetY = 1.5; // Centramos la figura verticalmente
+            tempObj.theta = -Math.PI / 2;
+            tempObj.phi = 0.1;
+            tempObj.globalRotY = -Math.PI / 6;
+            tempObj.rho = 5 * tempObj.rhoMin; // Más de lejos
             baseObj = tempObj;
             const rawEl = document.getElementById('raw-base');
             if (rawEl)
@@ -266,6 +270,14 @@ window.addEventListener('load', () => {
             tempObj.pivotX = 0;
             tempObj.pivotY = 0;
             tempObj.pivotZ = 0;
+            tempObj.targetX = -2.0;
+            tempObj.targetY = -0.5;
+            tempObj.targetZ = 0; // Se ensambla perfecto en 2.0, 2.0
+            tempObj.theta = -Math.PI / 2;
+            tempObj.phi = 0.1;
+            tempObj.globalRotY = -Math.PI / 6;
+            if (baseObj)
+                tempObj.rho = baseObj.rho; // Misma escala de perspectiva!
             movilObj = tempObj;
             const rawEl = document.getElementById('raw-movil');
             if (rawEl)
@@ -276,12 +288,6 @@ window.addEventListener('load', () => {
         }
     }
     repaintAll();
-    if (autoRotating) {
-        const btn = document.getElementById('btn-auto-rotate');
-        if (btn)
-            btn.innerHTML = '■ DETENER';
-        rotateLoop();
-    }
     // Color Palette Listeners
     (_a = document.getElementById('color-pink')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => {
         if (baseObj) {

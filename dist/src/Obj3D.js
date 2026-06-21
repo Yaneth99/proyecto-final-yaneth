@@ -34,6 +34,7 @@ export class Obj3D {
         this.localRotX = 0;
         this.localRotY = 0;
         this.localRotZ = 0;
+        this.globalRotY = 0;
         this.zoomMultiplier = 1.0;
     }
     read(file) {
@@ -136,17 +137,19 @@ export class Obj3D {
         this.w[i] = new Point3D(x, y, z);
     }
     shiftToOrigin() {
+        /*
         let xwC = 0.5 * (this.xMin + this.xMax);
         let ywC = 0.5 * (this.yMin + this.yMax);
         let zwC = 0.5 * (this.zMin + this.zMax);
         let n = this.w.length;
-        for (let i = 1; i < n; i++) {
-            if (this.w[i] != undefined) {
-                this.w[i].x -= xwC;
-                this.w[i].y -= ywC;
-                this.w[i].z -= zwC;
-            }
+        for (let i = 1; i < n; i++){
+           if (this.w[i] != undefined) {
+              this.w[i].x -= xwC;
+              this.w[i].y -= ywC;
+              this.w[i].z -= zwC;
+           }
         }
+        */
         let dx = this.xMax - this.xMin, dy = this.yMax - this.yMin, dz = this.zMax - this.zMin;
         this.rhoMin = 0.6 * Math.sqrt(dx * dx + dy * dy + dz * dz);
         this.rhoMax = 1000 * this.rhoMin;
@@ -196,6 +199,14 @@ export class Obj3D {
                 px -= this.targetX;
                 py -= this.targetY;
                 pz -= this.targetZ;
+                if (this.globalRotY !== 0) {
+                    let cosY = Math.cos(this.globalRotY);
+                    let sinY = Math.sin(this.globalRotY);
+                    let tmpX = px;
+                    let tmpZ = pz;
+                    px = tmpX * cosY + tmpZ * sinY;
+                    pz = -tmpX * sinY + tmpZ * cosY;
+                }
                 let x = this.v11 * px + this.v21 * py;
                 let y = this.v12 * px + this.v22 * py + this.v32 * pz;
                 let z = this.v13 * px + this.v23 * py + this.v33 * pz + this.v43;
@@ -213,8 +224,10 @@ export class Obj3D {
             }
         }
         let rangeX = xScrMax - xScrMin, rangeY = yScrMax - yScrMin;
-        this.d = this.zoomMultiplier * 0.95 * Math.min(dim.width / rangeX, dim.height / rangeY);
-        this.imgCenter = new Point2D(this.d * (xScrMin + xScrMax) / 2, this.d * (yScrMin + yScrMax) / 2);
+        // Fixed scaling factor based on canvas width to prevent auto-scaling each object differently
+        this.d = this.zoomMultiplier * (dim.width / 2.5);
+        // Fixed image center to prevent individual parts from auto-centering and breaking assembly
+        this.imgCenter = new Point2D(0, 0);
         for (let i = 1; i < n; i++) {
             if (this.vScr[i] != null) {
                 this.vScr[i].x *= this.d;
